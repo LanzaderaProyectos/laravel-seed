@@ -30,7 +30,6 @@ class LaravelSeedServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->registerCommands();
-            $this->registerDisks();
         }
     }
 
@@ -46,16 +45,5 @@ class LaravelSeedServiceProvider extends ServiceProvider
             SeedRollback::class,
             SeedStatus::class,
         ]);
-    }
-
-    /**
-     * @return void
-     */
-    private function registerDisks()
-    {
-        app()->config["filesystems.disks.seeders"] = [
-            "driver" => "local",
-            "root" => database_path("seeders"),
-        ];
     }
 }

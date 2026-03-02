@@ -3,7 +3,6 @@
 namespace Khalyomede\LaravelSeed\Traits;
 
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Storage;
 
 trait CapableOfLookingForSeeds
 {
@@ -12,7 +11,9 @@ trait CapableOfLookingForSeeds
      */
     private function getSeedFilePaths(): Collection
     {
-        return collect(Storage::disk("seeders")->files());
+        $files = glob(database_path('seeders/*.php'));
+
+        return collect($files)->map(fn ($path) => basename($path));
     }
 
     /**

@@ -4,7 +4,6 @@ namespace Khalyomede\LaravelSeed\Commands;
 
 use Carbon\Carbon;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Khalyomede\LaravelSeed\Traits\CapableOfRunningSeeds;
 
@@ -58,7 +57,7 @@ class SeedMake extends Command
         }
 
         if ($this->identicalSeederFound()) {
-            if (!$this->confirm("Another seeder already exist at {$this->getIdenticalSeederFilePath()}, do you still want to create this one?")) {
+            if (! $this->confirm("Another seeder already exist at {$this->getIdenticalSeederFilePath()}, do you still want to create this one?")) {
                 $this->info("Seeder creation caneled.");
 
                 exit(0);
@@ -74,7 +73,7 @@ class SeedMake extends Command
 
     private function cantEraseExistingSeeder(): bool
     {
-        return Storage::disk("seeders")->exists($this->getFilePath()) && $this->option("force") === null;
+        return file_exists(database_path("seeders/{$this->getFilePath()}")) && $this->option("force") === null;
     }
 
     /**
@@ -200,9 +199,12 @@ class SeedMake extends Command
      */
     private function storeSeederInFile()
     {
-        $written = Storage::disk("seeders")->put($this->seederFilePath, $this->seederFileContent);
+        $written = file_put_contents(
+            database_path("seeders/{$this->seederFilePath}"),
+            $this->seederFileContent
+        );
 
-        if (!$written) {
+        if ($written === false) {
             $this->error("Seeder could not be created.");
 
             exit(4);
@@ -224,14 +226,18 @@ class SeedMake extends Command
 
     private function identicalSeederFound(): bool
     {
-        return collect(Storage::disk("seeders")->files())->filter(function ($path) {
+        $files = glob(database_path("seeders/*.php"));
+
+        return collect($files)->filter(function ($path) {
             return Str::endsWith($path, "{$this->getFileName()}.php");
         })->count() > 0;
     }
 
     private function getIdenticalSeederFilePath(): string
     {
-        return collect(Storage::disk("seeders")->files())->filter(function ($path) {
+        $files = glob(database_path("seeders/*.php"));
+
+        return collect($files)->filter(function ($path) {
             return Str::endsWith($path, "{$this->getFileName()}.php");
         })->first();
     }
